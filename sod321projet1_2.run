@@ -2,7 +2,7 @@ option solver cplexamp;
 model sod321projet1_2.mod;
 data sod321projet1_2.dat;
 
-problem Pb_maitre: beta, lambda, gamma, f, on_decolle_du_depart, c_est_bien_le_premier, on_atterrit_a_l_arrivee, c_est_bien_le_dernier, on_visite_assez_d_aerodromes, carburant, compte_region, visiter_les_regions, pas_de_sur_place, continuite1;
+problem Pb_maitre: beta, lambda, f, on_decolle_du_depart, c_est_bien_le_premier, on_atterrit_a_l_arrivee, c_est_bien_le_dernier, on_visite_assez_d_aerodromes, carburant, compte_region, visiter_les_regions, pas_de_sur_place, continuite1;anticyle;
 option relax_integrality 0;
 
 problem Sous_probleme: S, cycletest, coherence;
@@ -17,15 +17,13 @@ if cycletest > -1 then {
 let n_cycle := n_cycle + 1;
 for {k in 1..n , l in 1..n} {
 if lambda[k,l] >= 1 then {
-let M_cycle[n_cycle , k + n*(l-1)] := S[k,l]; 
-}
-else let M_cycle[n_cycle , k + n*(l-1)] := 0;
-};
-}
-else break;
+let M_cycle[n_cycle , k + n*(l-1)] := S[k,l]; # alors pour ton update de M_cycle y a un souci, parce que là la matrice que tu rentres dans M_cycle c'est pas la matrice d'un ensemble
+} # ta condition sur lambda te permet bien de vérifier que les éléments que tu récupères sont des éléments cohérents avec la diagonale, mais faut que tu update toute la matrice
+else let M_cycle[n_cycle , k + n*(l-1)] := 0;# parce que quand tu repasses sur le problème maître il faut que toute la matrice soit cohérente
+}# moi je te conseille plutôt de faire juste en fonction de la diagonale de S, t'enlèves la condition sur lambda_k,l, et tu mets juste if S[k,k]=1 and S[l,l]=1 then 
+else break;# M_cycle[je sais pas ce que t'as fait avec tes indices, t'as applati les matrices en fait c'est ça ? pourquoi ?]=1 else M_cycle[blabla]=0
 };
 printf "--Valeur optimale : ";
 display f;
 display lambda;
 display beta;
-display gamma;
